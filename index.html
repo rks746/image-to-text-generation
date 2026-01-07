@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sophia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #0f172a;
+        --panel: #020617;
+        --accent: #38bdf8;
+        --accent-soft: rgba(56, 189, 248, 0.12);
+        --border-subtle: rgba(148, 163, 184, 0.4);
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --danger: #f97373;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          sans-serif;
+        background: radial-gradient(circle at top, #1d293b 0, #020617 45%, #000 100%);
+        color: var(--text);
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        padding: 32px 16px;
+      }
+
+      .shell {
+        width: 100%;
+        max-width: 1120px;
+        background: linear-gradient(
+            135deg,
+            rgba(148, 163, 184, 0.18),
+            rgba(15, 23, 42, 0.9)
+          ),
+          radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent);
+        border-radius: 24px;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        box-shadow: 0 24px 80px rgba(15, 23, 42, 0.85);
+        padding: 20px;
+        backdrop-filter: blur(22px);
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        gap: 16px;
+      }
+
+      .title-block {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      h1 {
+        font-size: 1.4rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .pill {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.7);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+      }
+
+      .subtitle {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .mode-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+
+      .main {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.3fr);
+        gap: 18px;
+      }
+
+      @media (max-width: 880px) {
+        body {
+          padding: 16px;
+        }
+        .shell {
+          padding: 16px;
+        }
+        .main {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .panel {
+        background: radial-gradient(circle at top left, #020617 0, #020617 40%);
+        border-radius: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        padding: 14px 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .panel-title {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--muted);
+      }
+
+      .badge {
+        font-size: 0.7rem;
+        padding: 2px 7px;
+        border-radius: 999px;
+        border: 1px solid rgba(56, 189, 248, 0.6);
+        background: rgba(15, 23, 42, 0.7);
+        color: #e0f2fe;
+      }
+
+      .field-label {
+        font-size: 0.8rem;
+        color: var(--muted);
+        margin-bottom: 4px;
+      }
+
+      .file-input-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .file-input-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px dashed rgba(148, 163, 184, 0.75);
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: var(--text);
+        background: rgba(15, 23, 42, 0.9);
+      }
+
+      .file-input-label span.icon {
+        display: inline-flex;
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        align-items: center;
+        justify-content: center;
+        background: rgba(56, 189, 248, 0.16);
+        color: #7dd3fc;
+        font-size: 0.8rem;
+      }
+
+      #file-name {
+        font-size: 0.78rem;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      select,
+      button {
+        font-family: inherit;
+      }
+
+      select {
+        width: 100%;
+        padding: 7px 9px;
+        border-radius: 999px;
+        border: 1px solid var(--border-subtle);
+        background: rgba(15, 23, 42, 0.95);
+        color: var(--text);
+        font-size: 0.85rem;
+        outline: none;
+      }
+
+      select:focus-visible {
+        border-color: rgba(56, 189, 248, 0.8);
+        box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.6);
+      }
+
+      button {
+        cursor: pointer;
+        border: none;
+        border-radius: 999px;
+        padding: 9px 18px;
+        background: radial-gradient(circle at top left, #38bdf8, #0ea5e9 55%, #0369a1);
+        color: #0b1120;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        box-shadow: 0 12px 30px rgba(8, 47, 73, 0.7);
+      }
+
+      button:disabled {
+        opacity: 0.55;
+        cursor: default;
+        box-shadow: none;
+      }
+
+      .button-secondary {
+        background: rgba(15, 23, 42, 0.9);
+        color: var(--muted);
+        border: 1px solid rgba(148, 163, 184, 0.6);
+        box-shadow: none;
+      }
+
+      .preview {
+        position: relative;
+        border-radius: 14px;
+        border: 1px solid rgba(15, 23, 42, 0.9);
+        background: radial-gradient(circle at top left, #020617 0, #020617 40%);
+        overflow: hidden;
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #preview-img {
+        max-width: 100%;
+        max-height: 260px;
+        display: none;
+        object-fit: contain;
+      }
+
+      .preview-placeholder {
+        text-align: center;
+        font-size: 0.78rem;
+        color: var(--muted);
+        padding: 24px;
+      }
+
+      .preview-placeholder span {
+        display: inline-flex;
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+        background: rgba(15, 23, 42, 0.9);
+        border: 1px solid rgba(148, 163, 184, 0.7);
+        font-size: 0.8rem;
+      }
+
+      .status-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.76rem;
+        color: var(--muted);
+      }
+
+      .status-pill {
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.6);
+        background: rgba(15, 23, 42, 0.9);
+      }
+
+      .status-pill strong {
+        color: #e5e7eb;
+      }
+
+      .output-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .output-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 999px;
+        background: #22c55e;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.16);
+      }
+
+      pre {
+        margin: 6px 0 0;
+        padding: 10px 11px;
+        border-radius: 10px;
+        background: rgba(15, 23, 42, 0.96);
+        border: 1px solid rgba(15, 23, 42, 0.9);
+        color: #e5e7eb;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 0.78rem;
+        max-height: 320px;
+        overflow: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .error {
+        color: var(--danger);
+      }
+
+      .controls-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .hint {
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="header">
+        <div class="title-block">
+          <h1>
+            Image-to-Text Generation Platform
+            <span class="pill">Local · CPU · Prototype</span>
+          </h1>
+          <p class="subtitle">
+            Upload an image, then extract text, describe the content, or convert notes
+            into structure.
+          </p>
+        </div>
+        <div>
+          <div class="mode-label">Mode</div>
+          <div class="badge" id="current-mode-label">Extract Text</div>
+        </div>
+      </header>
+
+      <main class="main">
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Input</div>
+          </div>
+
+          <div>
+            <div class="field-label">Image</div>
+            <div class="file-input-row">
+              <label class="file-input-label">
+                <span class="icon">＋</span>
+                <span>Upload image</span>
+                <input type="file" id="file-input" accept="image/*" />
+              </label>
+              <span id="file-name">No file selected</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="field-label">Action</div>
+            <select id="mode-select">
+              <option value="extract">Extract Text</option>
+              <option value="describe">Describe Image</option>
+              <option value="table">Convert to Table</option>
+              <option value="mindmap">Convert to Mind Map</option>
+            </select>
+            <p class="hint">
+              For <strong>Table</strong> and <strong>Mind Map</strong>, OCR runs first,
+              then the text-only model structures it.
+            </p>
+          </div>
+
+          <div class="preview">
+            <img id="preview-img" alt="Preview" />
+            <div id="preview-placeholder" class="preview-placeholder">
+              <span>🖼</span>
+              <div>Image preview will appear here after you select a file.</div>
+            </div>
+          </div>
+
+          <div class="status-row">
+            <div id="status-text">Idle</div>
+            <div class="controls-row">
+              <button id="run-btn">
+                <span>Run</span>
+                <span>⏵</span>
+              </button>
+              <button id="clear-btn" class="button-secondary">Clear</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">Output</div>
+            <div class="output-meta">
+              <span class="dot"></span>
+              <span id="output-meta-label">Waiting for input</span>
+            </div>
+          </div>
+          <pre id="output"><span class="hint">Results from the backend will appear here.</span></pre>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const fileInput = document.getElementById("file-input");
+      const fileNameEl = document.getElementById("file-name");
+      const previewImg = document.getElementById("preview-img");
+      const previewPlaceholder = document.getElementById("preview-placeholder");
+      const modeSelect = document.getElementById("mode-select");
+      const runBtn = document.getElementById("run-btn");
+      const clearBtn = document.getElementById("clear-btn");
+      const outputEl = document.getElementById("output");
+      const statusText = document.getElementById("status-text");
+      const outputMetaLabel = document.getElementById("output-meta-label");
+      const currentModeLabel = document.getElementById("current-mode-label");
+
+      function setStatus(text, isError = false) {
+        statusText.textContent = text;
+        statusText.className = isError ? "error" : "";
+      }
+
+      function setOutput(text, isError = false) {
+        outputEl.textContent = text;
+        if (isError) {
+          outputEl.classList.add("error");
+          outputMetaLabel.textContent = "Error";
+        } else {
+          outputEl.classList.remove("error");
+        }
+      }
+
+      function setLoading(loading) {
+        runBtn.disabled = loading;
+        clearBtn.disabled = loading;
+        runBtn.innerHTML = loading
+          ? '<span>Running</span><span>⏳</span>'
+          : '<span>Run</span><span>⏵</span>';
+      }
+
+      fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+        if (!file) {
+          fileNameEl.textContent = "No file selected";
+          previewImg.style.display = "none";
+          previewPlaceholder.style.display = "block";
+          return;
+        }
+        fileNameEl.textContent = file.name;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          previewImg.src = e.target.result;
+          previewImg.style.display = "block";
+          previewPlaceholder.style.display = "none";
+        };
+        reader.readAsDataURL(file);
+      });
+
+      modeSelect.addEventListener("change", () => {
+        const mode = modeSelect.value;
+        const map = {
+          extract: "Extract Text",
+          describe: "Describe Image",
+          table: "Convert to Table",
+          mindmap: "Convert to Mind Map",
+        };
+        currentModeLabel.textContent = map[mode] || "Extract Text";
+        outputMetaLabel.textContent = "Waiting for input";
+      });
+
+      clearBtn.addEventListener("click", () => {
+        fileInput.value = "";
+        fileNameEl.textContent = "No file selected";
+        previewImg.src = "";
+        previewImg.style.display = "none";
+        previewPlaceholder.style.display = "block";
+        setOutput("Results from the backend will appear here.");
+        setStatus("Idle");
+      });
+
+      async function callExtractText(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/extract-text", {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `OCR failed with status ${res.status}`);
+        }
+        const data = await res.json();
+        return data.text || "";
+      }
+
+      async function callDescribeImage(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/describe-image", {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(
+            err.detail || `Describe image failed with status ${res.status}`
+          );
+        }
+        const data = await res.json();
+        return data.description || "";
+      }
+
+      async function callStructure(text, mode) {
+        const res = await fetch("/structure", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ text, mode }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(
+            err.detail || `Structure failed with status ${res.status}`
+          );
+        }
+        const data = await res.json();
+        return data.result || "";
+      }
+
+      runBtn.addEventListener("click", async () => {
+        const file = fileInput.files[0];
+        const mode = modeSelect.value;
+
+        if (!file) {
+          setStatus("Please select an image first.", true);
+          setOutput("Please select an image file to continue.", true);
+          return;
+        }
+
+        setLoading(true);
+        setStatus("Processing...");
+        outputMetaLabel.textContent = "Running pipeline";
+
+        try {
+          if (mode === "extract") {
+            const text = await callExtractText(file);
+            setOutput(text || "(No text detected)");
+            outputMetaLabel.textContent = "OCR result";
+            setStatus("Text extracted.");
+          } else if (mode === "describe") {
+            const desc = await callDescribeImage(file);
+            setOutput(desc || "(No description generated)");
+            outputMetaLabel.textContent = "Image description (VLM)";
+            setStatus("Description generated.");
+          } else if (mode === "table" || mode === "mindmap") {
+            setStatus("Running OCR…");
+            const text = await callExtractText(file);
+            if (!text.trim()) {
+              throw new Error(
+                "OCR returned no text — try a clearer image or different notes."
+              );
+            }
+            setStatus("Structuring with text-only model…");
+            const structured = await callStructure(
+              text,
+              mode === "table" ? "table" : "mindmap"
+            );
+            const label =
+              mode === "table"
+                ? "Structured table JSON (LLM)"
+                : "Mind map (Markdown bullets, LLM)";
+            outputMetaLabel.textContent = label;
+            setOutput(structured || "(Empty result)");
+            setStatus("Structured output ready.");
+          } else {
+            throw new Error("Unknown mode.");
+          }
+        } catch (err) {
+          console.error(err);
+          setStatus(err.message || "Something went wrong.", true);
+          setOutput(err.message || String(err), true);
+        } finally {
+          setLoading(false);
+        }
+      });
+    </script>
+  </body>
+  </html>
