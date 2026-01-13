@@ -15,7 +15,7 @@ from backend.structure_module import build_mindmap, build_table
 from backend.utils import get_file_extension, save_upload_file
 
 
-app = FastAPI(title="Image Intelligence Prototype")
+app = FastAPI(title="Image-to-Text Prototype")
 
 app.add_middleware(
     CORSMiddleware,
@@ -130,11 +130,10 @@ async def describe_image_endpoint(file: UploadFile = File(...)):
 
     try:
         description = await describe_image(dest, ollama_client)
-        if not description.strip():
-            return {"description": "No readable text found in the image."}
         return {"description": description}
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.post("/structure")
