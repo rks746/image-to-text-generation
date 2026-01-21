@@ -14,20 +14,20 @@ A hybrid AI application that analyzes images to extract text, describe scenes, a
 
 ## Project Structure
 
-project-folder/ 
-├── backend/ 
-│   ├── config.py               # *Update ngrok URL here* 
-│   ├── describe_module.py 
-│   ├── main.py                 # *Entry point* 
-│   ├── ocr_module.py 
-│   ├── ollama_client.py 
-│   ├── structure_module.py 
-│   └── utils.py 
-├── uploads/                   # *Images saved here automatically* 
-├── index.html                 # *Frontend UI* 
-├── instructions.md 
-├── README.md 
-├── requirements.txt           # *Contains all dependencies* 
+project-folder/  
+├── backend/  
+│   ├── config.py               # *Update ngrok URL here*  
+│   ├── describe_module.py  
+│   ├── main.py                 # *Entry point*  
+│   ├── ocr_module.py  
+│   ├── ollama_client.py  
+│   ├── structure_module.py  
+│   └── utils.py  
+├── uploads/                   # *Images saved here automatically*  
+├── index.html                 # *Frontend UI*  
+├── instructions.md  
+├── README.md  
+├── requirements.txt           # *Contains all dependencies*  
 └── vlm.ipynb                  # *Upload this to Google Colab (preferably use the file shared in Google Drive)*  
 
 ## Execution Steps
