@@ -2,7 +2,7 @@ import uuid
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -11,11 +11,11 @@ from backend.config import BASE_DIR, LLM_MODEL, OLLAMA_BASE_URL, UPLOAD_DIR
 from backend.describe_module import describe_image
 from backend.ocr_module import get_ocr_service, initialize_ocr_service, run_ocr
 from backend.ollama_client import OllamaClient
-from backend.structure_module import build_mindmap, build_table
+from backend.structure_module import generate_structure
 from backend.utils import get_file_extension, save_upload_file
 
 
-app = FastAPI(title="Image-to-Text Prototype")
+app = FastAPI(title="Image-to-Text Prototype") # creates the web server 
 
 app.add_middleware(
     CORSMiddleware,
@@ -27,8 +27,8 @@ app.add_middleware(
 
 
 class StructureRequest(BaseModel):
-    text: str
-    mode: str  # "table" or "mindmap"
+    filename: str
+    mode: str  # table or mindmap
 
 
 ollama_client: Optional[OllamaClient] = None
@@ -38,13 +38,11 @@ ollama_client: Optional[OllamaClient] = None
 async def on_startup():
     global ollama_client
 
-    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True) # ensures upload directory exists so that images can be saved there
 
-    # Load OCR reader once at startup
-    initialize_ocr_service(languages=["en"])
+    initialize_ocr_service(languages=["en"]) # load OCR reader once at startup
 
-    # Initialize Ollama async client
-    ollama_client = OllamaClient(OLLAMA_BASE_URL)
+    ollama_client = OllamaClient(OLLAMA_BASE_URL) # initialize Ollama async client
     await ollama_client.startup()
 
 
@@ -54,7 +52,7 @@ async def on_shutdown():
         await ollama_client.shutdown()
 
 
-@app.get("/")
+@app.get("/") # home page
 async def serve_index():
     index_path = BASE_DIR / "index.html"
     if not index_path.exists():
@@ -95,7 +93,7 @@ async def extract_text_endpoint(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail="OCR service not initialized")
 
     ext = get_file_extension(file.filename or "")
-    filename = f"ocr-{uuid.uuid4().hex}{ext}"
+    filename = f"ocr-{uuid.uuid4().hex}{ext}" # generates random file names 
     dest = UPLOAD_DIR / filename
 
     try:
@@ -137,34 +135,31 @@ async def describe_image_endpoint(file: UploadFile = File(...)):
 
 
 @app.post("/structure")
-async def structure_endpoint(req: StructureRequest):
+async def structure_endpoint(file: UploadFile = File(...)):
     """
-    Convert extracted text into structured formats using qwen2.5:1.5b.
+    Auto-Structures image data.
+    Removed 'mode' parameter to match the new Auto-Frontend.
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
 
-    - mode = \"table\"   -> JSON table
-    - mode = \"mindmap\" -> Markdown bullet hierarchy
-    """
     if ollama_client is None:
         raise HTTPException(status_code=500, detail="LLM client not initialized")
 
-    mode = req.mode.lower().strip()
-    if mode not in {"table", "mindmap"}:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid mode. Must be 'table' or 'mindmap'.",
-        )
-
-    if not req.text.strip():
-        raise HTTPException(status_code=400, detail="Text must not be empty")
+    ext = get_file_extension(file.filename or "")
+    filename = f"struct-{uuid.uuid4().hex}{ext}"
+    dest = UPLOAD_DIR / filename
 
     try:
-        if mode == "table":
-            structured = await build_table(req.text, ollama_client, LLM_MODEL)
-        else:
-            structured = await build_mindmap(req.text, ollama_client, LLM_MODEL)
+        save_upload_file(file, dest)
+        # We no longer pass a 'mode', we just say "structure this"
+        result = await generate_structure(dest, ollama_client)
+        
+        return {
+            "mode": "auto",
+            "result": result
+        }
     except RuntimeError as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-    # For table we expect JSON; for mindmap we expect Markdown text.
-    return {"mode": mode, "result": structured}
-
+    finally:
+        file.file.close()

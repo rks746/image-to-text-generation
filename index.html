@@ -297,17 +297,6 @@
         color: var(--muted);
       }
 
-      .status-pill {
-        padding: 3px 8px;
-        border-radius: 999px;
-        border: 1px solid rgba(148, 163, 184, 0.6);
-        background: rgba(15, 23, 42, 0.9);
-      }
-
-      .status-pill strong {
-        color: #e5e7eb;
-      }
-
       .output-header {
         display: flex;
         justify-content: space-between;
@@ -368,12 +357,11 @@
       <header class="header">
         <div class="title-block">
           <h1>
-            Image-to-Text Generation Platform
-            <span class="pill">Local · CPU · Prototype</span>
+            Image-to-Text Platform
+            <span class="pill">Prototype</span>
           </h1>
           <p class="subtitle">
-            Upload an image, then extract text, describe the content, or convert notes
-            into structure.
+            Upload an image to extract text, describe content, or structure data into a table or mind map accordingly.
           </p>
         </div>
         <div>
@@ -403,14 +391,12 @@
           <div>
             <div class="field-label">Action</div>
             <select id="mode-select">
-              <option value="extract">Extract Text</option>
-              <option value="describe">Describe Image</option>
-              <option value="table">Convert to Table</option>
-              <option value="mindmap">Convert to Mind Map</option>
+              <option value="extract">Extract Text (OCR)</option>
+              <option value="describe">Describe Image (VLM)</option>
+              <option value="structure">Structure Image (Table/Mind Map)</option>
             </select>
             <p class="hint">
-              For <strong>Table</strong> and <strong>Mind Map</strong>, OCR runs first,
-              then the text-only model structures it.
+              <strong>Auto-Structure:</strong> The VLM (Vision Language Model) will automatically detect if the image is a table or diagram and format it accordingly.
             </p>
           </div>
 
@@ -418,7 +404,7 @@
             <img id="preview-img" alt="Preview" />
             <div id="preview-placeholder" class="preview-placeholder">
               <span>🖼</span>
-              <div>Image preview will appear here after you select a file.</div>
+              <div>Image preview will appear here.</div>
             </div>
           </div>
 
@@ -442,7 +428,7 @@
               <span id="output-meta-label">Waiting for input</span>
             </div>
           </div>
-          <pre id="output"><span class="hint">Results from the backend will appear here.</span></pre>
+          <pre id="output"><span class="hint">Results will appear here.</span></pre>
         </section>
       </main>
     </div>
@@ -506,8 +492,7 @@
         const map = {
           extract: "Extract Text",
           describe: "Describe Image",
-          table: "Convert to Table",
-          mindmap: "Convert to Mind Map",
+          structure: "Auto-Structure",
         };
         currentModeLabel.textContent = map[mode] || "Extract Text";
         outputMetaLabel.textContent = "Waiting for input";
@@ -519,7 +504,7 @@
         previewImg.src = "";
         previewImg.style.display = "none";
         previewPlaceholder.style.display = "block";
-        setOutput("Results from the backend will appear here.");
+        setOutput("Results will appear here.");
         setStatus("Idle");
       });
 
@@ -532,7 +517,7 @@
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(err.detail || `OCR failed with status ${res.status}`);
+          throw new Error(err.detail || `OCR failed: ${res.status}`);
         }
         const data = await res.json();
         return data.text || "";
@@ -547,27 +532,23 @@
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(
-            err.detail || `Describe image failed with status ${res.status}`
-          );
+          throw new Error(err.detail || `VLM failed: ${res.status}`);
         }
         const data = await res.json();
         return data.description || "";
       }
 
-      async function callStructure(text, mode) {
+      async function callStructure(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        
         const res = await fetch("/structure", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ text, mode }),
+            method: "POST",
+            body: formData,
         });
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(
-            err.detail || `Structure failed with status ${res.status}`
-          );
+          throw new Error(err.detail || `Structure failed: ${res.status}`);
         }
         const data = await res.json();
         return data.result || "";
@@ -589,35 +570,29 @@
 
         try {
           if (mode === "extract") {
+            // 1. OCR
             const text = await callExtractText(file);
             setOutput(text || "(No text detected)");
-            outputMetaLabel.textContent = "OCR result";
+            outputMetaLabel.textContent = "OCR Result";
             setStatus("Text extracted.");
+
           } else if (mode === "describe") {
+            // 2. Describe (VLM)
             const desc = await callDescribeImage(file);
             setOutput(desc || "(No description generated)");
-            outputMetaLabel.textContent = "Image description (VLM)";
+            outputMetaLabel.textContent = "VLM Description";
             setStatus("Description generated.");
-          } else if (mode === "table" || mode === "mindmap") {
-            setStatus("Running OCR…");
-            const text = await callExtractText(file);
-            if (!text.trim()) {
-              throw new Error(
-                "OCR returned no text — try a clearer image or different notes."
-              );
-            }
-            setStatus("Structuring with text-only model…");
-            const structured = await callStructure(
-              text,
-              mode === "table" ? "table" : "mindmap"
-            );
-            const label =
-              mode === "table"
-                ? "Structured table JSON (LLM)"
-                : "Mind map (Markdown bullets, LLM)";
-            outputMetaLabel.textContent = label;
+
+          } else if (mode === "structure") {
+            // 3. Auto-Structure (VLM)
+            setStatus("Analyzing structure (Colab VLM)...");
+            
+            const structured = await callStructure(file);
+            
+            outputMetaLabel.textContent = "Structured Output (Auto)";
             setOutput(structured || "(Empty result)");
             setStatus("Structured output ready.");
+
           } else {
             throw new Error("Unknown mode.");
           }
@@ -631,4 +606,4 @@
       });
     </script>
   </body>
-  </html>
+</html>
