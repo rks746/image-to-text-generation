@@ -7,28 +7,28 @@ A hybrid AI application that analyzes images to extract text, describe scenes, a
 * **Frontend:** HTML5, CSS3, JavaScript
 * **Backend:** Python (FastAPI)
 * **OCR Engine:** EasyOCR (Runs locally on CPU)
-* **Fallback LLM:** Ollama (`qwen2.5:1.5b` or similar) - Runs locally
-* **Primary VLM:** `Qwen2.5-VL-3B-Instruct` - Runs on Google Colab (T4 GPU)
+* **Fallback LLM:** Ollama (*qwen2.5:1.5b* or similar) - Runs locally
+* **Primary VLM:** *Qwen2.5-VL-3B-Instruct* - Runs on Google Colab (T4 GPU)
 * **Tunneling:** ngrok (Connects local backend to Colab)
-* **Storage:** Local filesystem (`/uploads` folder)
+* **Storage:** Local filesystem (*/uploads* folder)
 
 ## Project Structure
 
-project-folder/
-├── backend/
-│   ├── config.py               # *Update ngrok URL here*
-│   ├── describe_module.py
-│   ├── main.py                 # *Entry point*
-│   ├── ocr_module.py
-│   ├── ollama_client.py
-│   ├── structure_module.py
-│   └── utils.py
-├── uploads/                   # *Images saved here automatically*
-├── index.html                 # *Frontend UI*
-├── instructions.md
-├── README.md
-├── requirements.txt           # *Contains all dependencies*
-└── vlm.ipynb                  # *Upload this to Google Colab (preferably use the file shared in Google Drive)* 
+project-folder/ 
+├── backend/ 
+│   ├── config.py               # *Update ngrok URL here* 
+│   ├── describe_module.py 
+│   ├── main.py                 # *Entry point* 
+│   ├── ocr_module.py 
+│   ├── ollama_client.py 
+│   ├── structure_module.py 
+│   └── utils.py 
+├── uploads/                   # *Images saved here automatically* 
+├── index.html                 # *Frontend UI* 
+├── instructions.md 
+├── README.md 
+├── requirements.txt           # *Contains all dependencies* 
+└── vlm.ipynb                  # *Upload this to Google Colab (preferably use the file shared in Google Drive)*  
 
 ## Execution Steps
 
@@ -71,7 +71,7 @@ Open your terminal in the project root directory and run:
 6. **Run the VLM:**
 * Run all cells in the Colab notebook.
 * Wait for the model to download and load (~2-3 minutes).
-* The last cell will output a public URL (e.g., *https://2843-xx-xx.ngrok-free.app*). **Copy this URL.**
+* The last cell will output a public URL (e.g., *https://2843-xx-xx.ngrok-free.app*). **Copy that URL.**
 
 
 ### Phase 3: Connecting & Running
